@@ -74,7 +74,16 @@ def process_url(URL, re_URL):
 	elif re_URL[0:4] == "http":
 		result = re_URL
 	elif re_URL[0:2] != "//" and re_URL not in black_url:
-		result = host_URL + "://" + ab_URL + re_URL
+		if re_URL[0:1] == "/":
+			result = host_URL + "://" + ab_URL + re_URL
+		else:
+			if re_URL[0:1] == ".":
+				if re_URL[0:2] == "..":
+					result = host_URL + "://" + ab_URL + re_URL[2:]
+				else:
+					result = host_URL + "://" + ab_URL + re_URL[1:]
+			else:
+				result = host_URL + "://" + ab_URL + "/" + re_URL
 	else:
 		result = URL
 	return result
