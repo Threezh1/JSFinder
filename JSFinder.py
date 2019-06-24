@@ -47,18 +47,15 @@ def extract_URL(JS):
 	result = re.finditer(pattern, str(JS))
 	if result == None:
 		return None
-	js_url = []
-	for match in result: 
-		if match.group() not in js_url:
-			js_url.append(match.group().strip('"').strip("'"))
-	return js_url
+	return [match.group().strip('"').strip("'") for match in result
+		if match.group() not in js_url]
 
 # Get the page source
 def Extract_html(URL):
 	header = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.108 Safari/537.36"}
 	try:
-		re = requests.get(URL, headers = header, timeout=3, verify=False)
-		raw = re.content.decode("utf-8", "ignore")
+		raw = requests.get(URL, headers = header, timeout=3, verify=False)
+		raw = raw.content.decode("utf-8", "ignore")
 		return raw
 	except:
 		return None
@@ -143,14 +140,7 @@ def find_by_url(url, js = False):
 				if singerurl.strip() not in result:
 					result.append(singerurl)
 		return result
-	else:
-		temp_urls = extract_URL(Extract_html(url))
-		if len(temp_urls) == 0:return None
-		result = []
-		for temp_url in temp_urls:
-			if temp_url not in result:
-				result.append(temp_url)
-		return result
+	return sorted(set(extract_URL(Extract_html(url)))) or None
 
 
 def find_subdomain(urls, mainurl):
