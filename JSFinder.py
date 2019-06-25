@@ -47,6 +47,7 @@ def extract_URL(JS):
 	result = re.finditer(pattern, str(JS))
 	if result == None:
 		return None
+	js_url = []
 	return [match.group().strip('"').strip("'") for match in result
 		if match.group() not in js_url]
 
