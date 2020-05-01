@@ -1,4 +1,4 @@
-#!"C:\Program Files\Python27\python.exe"
+#!/usr/bin/env python"
 # coding: utf-8
 # By Threezh1
 # https://threezh1.github.io/
