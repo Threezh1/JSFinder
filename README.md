@@ -1,9 +1,14 @@
 # JSFinder
+
 JSFinder is a tool for quickly extracting URLs and subdomains from JS files on a website.
 
 JSFinder是一款用作快速在网站的js文件中提取URL，子域名的工具。
 
 提取URL的正则部分使用的是[LinkFinder](https://github.com/GerbenJavado/LinkFinder) 
+
+JSFinder获取URL和子域名的方式：
+
+![image](https://i.loli.net/2020/05/24/R2fImgNZHPkvhEj.png)
 
 Blog: https://threezh1.github.io/
 
@@ -11,7 +16,9 @@ Blog: https://threezh1.github.io/
 
 - **简单爬取**
 
-`python JSFinder.py -u http://www.mi.com`
+```
+python JSFinder.py -u http://www.mi.com
+```
 
 这个命令会爬取 http://www.mi.com 这单个页面的所有的js链接，并在其中发现url和子域名
 
@@ -37,23 +44,31 @@ order.mi.com
 
 - **深度爬取**
 
-`python JSFinder.py -u http://www.mi.com -d`
+```
+python JSFinder.py -u http://www.mi.com -d
+```
 
 深入一层页面爬取JS，时间会消耗的更长。
 
 建议使用-ou 和 -os来指定保存URL和子域名的文件名。 例如：
 
-`python JSFinder.py -u http://www.mi.com -d -ou mi_url.txt -os mi_subdomain.txt`
+```
+python JSFinder.py -u http://www.mi.com -d -ou mi_url.txt -os mi_subdomain.txt
+```
 
 - **批量指定URL/指定JS**
 
 指定URL：
 
-`python JSFinder.py -f text.txt`
+```
+python JSFinder.py -f text.txt
+```
 
 指定JS：
 
-`python JSFinder.py -f text.txt -j`
+```
+python JSFinder.py -f text.txt -j
+```
 
 可以用brupsuite爬取网站后提取出URL或者JS链接，保存到txt文件中，一行一个。
 
@@ -61,13 +76,23 @@ order.mi.com
 
 - **其他**
 
+-c 指定cookie来爬取页面 例：
+
+```
+python JSFinder.py -u http://www.mi.com -c "session=xxx"
+```
+
 -ou 指定文件名保存URL链接 例：
 
-`python JSFinder.py -u http://www.mi.com -ou mi_url.txt`
+```
+python JSFinder.py -u http://www.mi.com -ou mi_url.txt
+```
 
 -os 指定文件名保存子域名 例：
 
-`python JSFinder.py -u http://www.mi.com -os mi_subdomain.txt`
+```
+python JSFinder.py -u http://www.mi.com -os mi_subdomain.txt
+```
 
 - **注意**
 
@@ -83,24 +108,41 @@ url 需要http:// 或 https://
 
 实测简单爬取：
 
-![jietu_01.jpg](https://i.loli.net/2019/06/10/5cfe47d6d811a49833.jpg)
+```
+python3 JSFinder.py -u https://www.jd.com/
+```
 
-![jietu_02.jpg](https://i.loli.net/2019/06/10/5cfe47d6c13a896578.jpg)
+URL:
+
+![02.jpg](https://i.loli.net/2020/05/24/aROFI5fC3UyK8EP.jpg)
+
+![03.jpg](https://i.loli.net/2020/05/24/rXC4Bba7oMw8AHW.jpg)
+
+Subdomain:
+
+![01.jpg](https://i.loli.net/2020/05/24/69WvDmy7al4hQfd.jpg)
 
 实测深度爬取：
 
-![01.jpg](https://i.loli.net/2019/06/10/5cfe4e4f0fc5f12808.jpg)
+```
+python3 JSFinder.py -u https://www.jd.com/ -d -ou jd_url.txt -os jd_domain.txt
+```
 
-![02.jpg](https://i.loli.net/2019/06/10/5cfe4e4ee6a0073690.jpg)
+![05.jpg](https://i.loli.net/2020/05/24/dhxTQnaW4ef9Vzu.jpg)
 
-	http://www.oppo.com
-	URL:4426 个
-	子域名：24 个
+![06.jpg](https://i.loli.net/2020/05/24/NAX9PnLaW6melVk.jpg)
 
-	http://www.mi.com
-	URL:1043 个
-	子域名：111 个
+实际测试：
+```
+http://www.oppo.com
+URL:4426 个
+子域名：24 个
 
-	http://www.jd.com
-	URL:3627 个
-	子域名：306 个
+http://www.mi.com
+URL:1043 个
+子域名：111 个
+
+http://www.jd.com
+URL:3627 个
+子域名：306 个
+```
