@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python"
 # coding: utf-8
 # By Threezh1
 # https://threezh1.github.io/
@@ -11,6 +11,7 @@ from bs4 import BeautifulSoup
 def parse_args():
     parser = argparse.ArgumentParser(epilog='\tExample: \r\npython ' + sys.argv[0] + " -u http://www.baidu.com")
     parser.add_argument("-u", "--url", help="The website")
+    parser.add_argument("-c", "--cookie", help="The website cookie")
     parser.add_argument("-f", "--file", help="The file contains url or js")
     parser.add_argument("-ou", "--outputurl", help="Output file name. ")
     parser.add_argument("-os", "--outputsubdomain", help="Output file name. ")
@@ -53,7 +54,8 @@ def extract_URL(JS):
 
 # Get the page source
 def Extract_html(URL):
-	header = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.108 Safari/537.36"}
+	header = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.108 Safari/537.36",
+	"Cookie": args.cookie}
 	try:
 		raw = requests.get(URL, headers = header, timeout=3, verify=False)
 		raw = raw.content.decode("utf-8", "ignore")
@@ -225,12 +227,12 @@ def giveresult(urls, domian):
 		content_subdomain += subdomain + "\n"
 		print(subdomain)
 	if args.outputurl != None:
-		with open(args.outputurl, "w", encoding='utf-8') as fobject:
+		with open(args.outputurl, "a", encoding='utf-8') as fobject:
 			fobject.write(content_url)
 		print("\nOutput " + str(len(urls)) + " urls")
 		print("Path:" + args.outputurl)
 	if args.outputsubdomain != None:
-		with open(args.outputsubdomain, "w", encoding='utf-8') as fobject:
+		with open(args.outputsubdomain, "a", encoding='utf-8') as fobject:
 			fobject.write(content_subdomain)
 		print("\nOutput " + str(len(subdomains)) + " subdomains")
 		print("Path:" + args.outputsubdomain)
