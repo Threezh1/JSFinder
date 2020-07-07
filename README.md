@@ -10,7 +10,7 @@ JSFinder获取URL和子域名的方式：
 
 ![image](https://i.loli.net/2020/05/24/R2fImgNZHPkvhEj.png)
 
-Blog: https://threezh1.github.io/
+Blog: https://threezh1.com/
 
 ## 用法
 
@@ -146,3 +146,11 @@ http://www.jd.com
 URL:3627 个
 子域名：306 个
 ```
+
+
+## 最近计划
+
+- 代码优化
+- 添加协程
+- 简单xss扫描
+- 敏感信息泄露检测

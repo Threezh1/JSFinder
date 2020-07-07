@@ -1,7 +1,7 @@
 #!/usr/bin/env python"
 # coding: utf-8
 # By Threezh1
-# https://threezh1.github.io/
+# https://threezh1.com/
 
 import requests, argparse, sys, re
 from requests.packages import urllib3
