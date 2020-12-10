@@ -10,7 +10,11 @@ JSFinder获取URL和子域名的方式：
 
 ![image](https://i.loli.net/2020/05/24/R2fImgNZHPkvhEj.png)
 
-Blog: https://threezh1.github.io/
+Blog: https://threezh1.com/
+
+## 更新说明
+
+- 增加油猴脚本用于在浏览器上访问页面时获取域名与接口，具体可见：https://github.com/Threezh1/Deconstruct/tree/main/DevTools_JSFinder
 
 ## 用法
 
