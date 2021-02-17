@@ -7,6 +7,8 @@ import requests, argparse, sys, re
 from requests.packages import urllib3
 from urllib.parse import urlparse
 from bs4 import BeautifulSoup
+from tld import get_fld
+from multiprocessing.dummy import Pool
 
 def parse_args():
     parser = argparse.ArgumentParser(epilog='\tExample: \r\npython ' + sys.argv[0] + " -u http://www.baidu.com")
@@ -46,7 +48,7 @@ def extract_URL(JS):
 	"""
 	pattern = re.compile(pattern_raw, re.VERBOSE)
 	result = re.finditer(pattern, str(JS))
-	if result == None:
+	if result is None:
 		return None
 	js_url = []
 	return [match.group().strip('"').strip("'") for match in result
@@ -105,7 +107,7 @@ def find_by_url(url, js = False):
 		except:
 			print("Please specify a URL like https://www.baidu.com")
 		html_raw = Extract_html(url)
-		if html_raw == None: 
+		if html_raw is None:
 			print("Fail to access " + url)
 			return None
 		#print(html_raw)
@@ -115,7 +117,7 @@ def find_by_url(url, js = False):
 		script_temp = ""
 		for html_script in html_scripts:
 			script_src = html_script.get("src")
-			if script_src == None:
+			if script_src is None:
 				script_temp += html_script.get_text() + "\n"
 			else:
 				purl = process_url(url, script_src)
@@ -129,12 +131,15 @@ def find_by_url(url, js = False):
 			for temp_url in temp_urls:
 				allurls.append(process_url(script, temp_url)) 
 		result = []
+		miandomain = get_fld(url, fail_silently=True, fix_protocol=True)
+		if not miandomain:
+			return None
 		for singerurl in allurls:
-			url_raw = urlparse(url)
-			domain = url_raw.netloc
-			positions = find_last(domain, ".")
-			miandomain = domain
-			if len(positions) > 1:miandomain = domain[positions[-2] + 1:]
+			# url_raw = urlparse(url)
+			# domain = url_raw.netloc
+			# positions = find_last(domain, ".")
+			# miandomain = domain
+			# if len(positions) > 1:miandomain = domain[positions[-2] + 1:]
 			#print(miandomain)
 			suburl = urlparse(singerurl)
 			subdomain = suburl.netloc
@@ -147,17 +152,19 @@ def find_by_url(url, js = False):
 
 
 def find_subdomain(urls, mainurl):
-	url_raw = urlparse(mainurl)
-	domain = url_raw.netloc
-	miandomain = domain
-	positions = find_last(domain, ".")
-	if len(positions) > 1:miandomain = domain[positions[-2] + 1:]
+	# url_raw = urlparse(mainurl)
+	# domain = url_raw.netloc
+	# miandomain = domain
+	# positions = find_last(domain, ".")
+	# if len(positions) > 1:miandomain = domain[positions[-2] + 1:]
+	miandomain = get_fld(mainurl, fail_silently=True, fix_protocol=True)
 	subdomains = []
 	for url in urls:
 		suburl = urlparse(url)
 		subdomain = suburl.netloc
 		#print(subdomain)
 		if subdomain.strip() == "": continue
+		subdomain = subdomain.strip('\\/').split(':')[0]
 		if miandomain in subdomain:
 			if subdomain not in subdomains:
 				subdomains.append(subdomain)
@@ -173,22 +180,32 @@ def find_by_url_deep(url):
 	links = []
 	for html_a in html_as:
 		src = html_a.get("href")
-		if src == "" or src == None: continue
+		if src == "" or src is None: continue
 		link = process_url(url, src)
 		if link not in links:
 			links.append(link)
 	if links == []: return None
 	print("ALL Find " + str(len(links)) + " links")
 	urls = []
-	i = len(links)
-	for link in links:
-		temp_urls = find_by_url(link)
-		if temp_urls == None: continue
-		print("Remaining " + str(i) + " | Find " + str(len(temp_urls)) + " URL in " + link)
+	pool = Pool(10)
+	url_results = pool.map(find_by_url, links)
+	pool.close()
+	pool.join()
+	for temp_urls in url_results:
+		if temp_urls is None:
+			continue
 		for temp_url in temp_urls:
 			if temp_url not in urls:
 				urls.append(temp_url)
-		i -= 1
+	# i = len(links)
+	# for link in links:
+	# 	temp_urls = find_by_url(link)
+	# 	if temp_urls == None: continue
+	# 	print("Remaining " + str(i) + " | Find " + str(len(temp_urls)) + " URL in " + link)
+	# 	for temp_url in temp_urls:
+	# 		if temp_url not in urls:
+	# 			urls.append(temp_url)
+	# 	i -= 1
 	return urls
 
 	
@@ -204,7 +221,7 @@ def find_by_file(file_path, js=False):
 			temp_urls = find_by_url(link)
 		else:
 			temp_urls = find_by_url(link, js=True)
-		if temp_urls == None: continue
+		if temp_urls is None: continue
 		print(str(i) + " Find " + str(len(temp_urls)) + " URL in " + link)
 		for temp_url in temp_urls:
 			if temp_url not in urls:
@@ -213,7 +230,7 @@ def find_by_file(file_path, js=False):
 	return urls
 
 def giveresult(urls, domian):
-	if urls == None:
+	if urls is None:
 		return None
 	print("Find " + str(len(urls)) + " URL:")
 	content_url = ""
@@ -226,12 +243,12 @@ def giveresult(urls, domian):
 	for subdomain in subdomains:
 		content_subdomain += subdomain + "\n"
 		print(subdomain)
-	if args.outputurl != None:
+	if args.outputurl is not None:
 		with open(args.outputurl, "a", encoding='utf-8') as fobject:
 			fobject.write(content_url)
 		print("\nOutput " + str(len(urls)) + " urls")
 		print("Path:" + args.outputurl)
-	if args.outputsubdomain != None:
+	if args.outputsubdomain is not None:
 		with open(args.outputsubdomain, "a", encoding='utf-8') as fobject:
 			fobject.write(content_subdomain)
 		print("\nOutput " + str(len(subdomains)) + " subdomains")
@@ -240,7 +257,7 @@ def giveresult(urls, domian):
 if __name__ == "__main__":
 	urllib3.disable_warnings()
 	args = parse_args()
-	if args.file == None:
+	if args.file is None:
 		if args.deep is not True:
 			urls = find_by_url(args.url)
 			giveresult(urls, args.url)
