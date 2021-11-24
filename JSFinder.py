@@ -7,6 +7,29 @@ import requests, argparse, sys, re
 from requests.packages import urllib3
 from urllib.parse import urlparse
 from bs4 import BeautifulSoup
+from threading import Thread
+from queue import Queue
+from time import sleep
+
+q = Queue() #采用队列的方式处理多线程
+good = [] #该变量用于存放可连通的域名
+
+def check_domain(): #该功能用于检查域名是否可以访问
+	global good
+	while(q.empty() == False):
+		url = "http://" + q.get()
+		header = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.108 Safari/537.36",
+		"Cookie": args.cookie}
+		try:
+			r = requests.get(url = url, headers = header, timeout = 1, verify=False, allow_redirects = True)
+			if(r.status_code == 200):
+				print(q.get())
+				good.append(q.get())
+		except:
+			pass
+		finally:
+			q.task_done()
+	
 
 def parse_args():
     parser = argparse.ArgumentParser(epilog='\tExample: \r\npython ' + sys.argv[0] + " -u http://www.baidu.com")
@@ -57,9 +80,11 @@ def Extract_html(URL):
 	header = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.108 Safari/537.36",
 	"Cookie": args.cookie}
 	try:
-		raw = requests.get(URL, headers = header, timeout=3, verify=False)
-		raw = raw.content.decode("utf-8", "ignore")
-		return raw
+		raw = requests.get(URL, headers = header, timeout=3, verify=False, allow_redirects = True)
+		code = raw.status_code
+		if(code == 200):
+			raw = raw.content.decode("utf-8", "ignore")
+			return raw
 	except:
 		return None
 
@@ -133,13 +158,13 @@ def find_by_url(url, js = False):
 			url_raw = urlparse(url)
 			domain = url_raw.netloc
 			positions = find_last(domain, ".")
-			miandomain = domain
-			if len(positions) > 1:miandomain = domain[positions[-2] + 1:]
-			#print(miandomain)
+			maindomain = domain
+			if len(positions) > 1:maindomain = domain[positions[-2] + 1:]
+			#print(maindomain)
 			suburl = urlparse(singerurl)
 			subdomain = suburl.netloc
 			#print(singerurl)
-			if miandomain in subdomain or subdomain.strip() == "":
+			if maindomain in subdomain or subdomain.strip() == "":
 				if singerurl.strip() not in result:
 					result.append(singerurl)
 		return result
@@ -147,21 +172,32 @@ def find_by_url(url, js = False):
 
 
 def find_subdomain(urls, mainurl):
+	subdomains = []
 	url_raw = urlparse(mainurl)
 	domain = url_raw.netloc
-	miandomain = domain
+	maindomain = domain
 	positions = find_last(domain, ".")
-	if len(positions) > 1:miandomain = domain[positions[-2] + 1:]
-	subdomains = []
+	if len(positions) > 1:maindomain = domain[positions[-2] + 1:]
 	for url in urls:
 		suburl = urlparse(url)
 		subdomain = suburl.netloc
-		#print(subdomain)
+		# print(subdomain)
 		if subdomain.strip() == "": continue
-		if miandomain in subdomain:
+		if maindomain in subdomain:
 			if subdomain not in subdomains:
 				subdomains.append(subdomain)
-	return subdomains
+				q.put(subdomain)
+	for i in range(20):
+		t = Thread(target = check_domain) #这里采用多线程的方式对域名进行检测连通性
+		sleep(0.1)
+		t.start()
+		t.join()
+	print("\nFind Subdomain:")
+	with open("result.txt", "w+", encoding = 'utf8') as f:
+		for i in good:
+			print(i) #实时打印可联通的域名
+			f.write(i + "\n")  #新增导出到文件的功能
+	print("已导出到文件result.txt")
 
 def find_by_url_deep(url):
 	html_raw = Extract_html(url)
@@ -212,20 +248,17 @@ def find_by_file(file_path, js=False):
 		i -= 1
 	return urls
 
-def giveresult(urls, domian):
+def giveresult(urls, domain):
+	global subdomains
 	if urls == None:
 		return None
-	print("Find " + str(len(urls)) + " URL:")
+	print("Find " + str(len(urls)) + " URL.Parseing the domain...")
 	content_url = ""
 	content_subdomain = ""
-	for url in urls:
-		content_url += url + "\n"
-		print(url)
-	subdomains = find_subdomain(urls, domian)
-	print("\nFind " + str(len(subdomains)) + " Subdomain:")
-	for subdomain in subdomains:
-		content_subdomain += subdomain + "\n"
-		print(subdomain)
+	# for url in urls: #我认为此处功能没什么实际意义，暂时注释掉
+	# 	content_url += url + "\n"
+	# 	print(url)
+	find_subdomain(urls, domain)
 	if args.outputurl != None:
 		with open(args.outputurl, "a", encoding='utf-8') as fobject:
 			fobject.write(content_url)
